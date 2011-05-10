@@ -25,4 +25,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/artistic-license.php
   repository: http://github.com/TJC/Retry
-version: 0.11
+version: 0.12
