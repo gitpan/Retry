@@ -1,6 +1,10 @@
 package Retry;
-use Moose 1.01; # Probably fine with 0.92 or later, but untested.
-our $VERSION = '0.12';
+use strict;
+use warnings;
+use Moo;
+use MooX::Types::MooseLike::Base qw( Int CodeRef );
+
+our $VERSION = '1.00';
 
 =head1 NAME
 
@@ -14,20 +18,27 @@ attempt fails.
 
 Example:
 
-  my $agent = Retry->new(
-    failure_callback => sub { warn "oh dear, error: " . $_[0]; },
-  );
-  eval {
-    $agent->retry(
-      sub {
-        this_code_might_die();
-      }
-    );
+  use Retry;
+  use Try::Tiny;
+  use LWP::UserAgent;
+
+  my $code_to_retry = sub {
+    my $r = LWP::UserAgent->new->get("http://example.com");
+    die $r->status_line unless $r->is_success;
+    return $r;
   };
-  if ($@) {
-    die "We totally failed!";
-    # Note that if we succeeded on a retry, this won't get called.
+
+  my $agent = Retry->new(
+    # This callback is optional:
+    failure_callback => sub { warn "Transient error: " . $_[0]; },
+  );
+
+  try {
+    $agent->retry($code_to_retry)
   }
+  catch {
+    warn "All attempts failed: $_";
+  };
 
 =head1 ATTRIBUTES
 
@@ -45,7 +56,7 @@ It defaults to 8 seconds.
 
 has 'retry_delay' => (
     is => 'rw',
-    isa => 'Int',
+    isa => Int,
     default => 8
 );
 
@@ -59,7 +70,7 @@ It defaults to 5.
 
 has 'max_retry_attempts' => (
     is => 'rw',
-    isa => 'Int',
+    isa => Int,
     default => 5,
 );
 
@@ -78,7 +89,7 @@ For example:
 
 has 'failure_callback' => (
     is => 'rw',
-    isa => 'CodeRef',
+    isa => CodeRef,
     default => sub { sub {} }, # The way of the Moose is sometimes confusing.
 );
 
@@ -130,7 +141,7 @@ Toby Corkindale, L<mailto:tjc@cpan.org>
 
 =head1 LICENSE
 
-This module is released under the Perl Artistic License.
+This module is released under the Perl Artistic License 2.0: L<http://www.perlfoundation.org/artistic_license_2_0>
 
 It is based upon source code which is Copyright 2010 Strategic Data Pty Ltd,
 however it is used and released with permission.
@@ -146,6 +157,4 @@ However L<Attempt> has a simpler syntax.
 
 =cut
 
-no Moose;
-__PACKAGE__->meta->make_immutable;
 1;

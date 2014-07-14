@@ -5,10 +5,11 @@ name 'Retry';
 perl_version '5.008001';
 all_from 'lib/Retry.pm';
 
-requires 'Moose' => 1.01; # Probably fine with .92 onwards though.
+requires 'Moo';
 build_requires 'Test::More' => 0.88;
 build_requires 'Test::Exception';
 
 resources 'repository' => 'http://github.com/TJC/Retry';
+license 'artistic_2';
 
 WriteAll;
